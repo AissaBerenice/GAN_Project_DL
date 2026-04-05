@@ -30,7 +30,7 @@ class Config:
 
     # ── Training ──────────────────────────────────────────────────────────────
     BATCH_SIZE  = 32
-    N_EPOCHS    = 30
+    N_EPOCHS    = 3
     LR          = 0.0002
     BETA1       = 0.5
     BETA2       = 0.999
