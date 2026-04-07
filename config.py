@@ -4,17 +4,31 @@ config.py — Central configuration for AttGAN.
 All hyperparameters and directory paths live here.
 Import this anywhere in the project:
     from config import Config
+
+For experiments, subclass Config and override only the values that change:
+    from experiments.exp1_baseline import Exp1Config
 """
 
 from pathlib import Path
 
 
 class Config:
+    # ── Experiment identity ───────────────────────────────────────────────────
+    # Change this when running different experiments so results are
+    # saved to results/<EXPERIMENT_NAME>/ and checkpoints/<EXPERIMENT_NAME>/
+    EXPERIMENT_NAME = "default"
+
     # ── Paths (relative to repo root — works after `git clone`) ──────────────
-    ROOT          = Path(__file__).parent.resolve()
-    DATA_DIR      = ROOT / "data"
-    RESULTS_DIR   = ROOT / "results"
-    CHECKPOINT_DIR = ROOT / "checkpoints"
+    ROOT           = Path(__file__).parent.resolve()
+    DATA_DIR       = ROOT / "data"
+
+    @property
+    def RESULTS_DIR(self):
+        return self.ROOT / "results" / self.EXPERIMENT_NAME
+
+    @property
+    def CHECKPOINT_DIR(self):
+        return self.ROOT / "checkpoints" / self.EXPERIMENT_NAME
 
     # ── Dataset ───────────────────────────────────────────────────────────────
     IMG_SIZE = 128
@@ -30,7 +44,7 @@ class Config:
 
     # ── Training ──────────────────────────────────────────────────────────────
     BATCH_SIZE  = 32
-    N_EPOCHS    = 3
+    N_EPOCHS    = 30
     LR          = 0.0002
     BETA1       = 0.5
     BETA2       = 0.999
@@ -49,6 +63,11 @@ class Config:
     # ── Logging ───────────────────────────────────────────────────────────────
     SAVE_EVERY      = 5    # save samples + checkpoint every N epochs
     LOG_EVERY_STEPS = 100  # print loss every N batches
+
+    # ── Metrics ───────────────────────────────────────────────────────────────
+    # Set to True to compute FID + DACID after training (adds ~5 min on T4)
+    COMPUTE_METRICS   = True
+    METRICS_N_SAMPLES = 2048   # number of real/fake images used for FID/DACID
 
     def __init__(self):
         """Create output directories on instantiation."""

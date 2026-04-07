@@ -168,4 +168,29 @@ class Trainer:
                 )
 
         print("\n[trainer] Training complete ✓")
+
+        # Compute and persist metrics
+        if cfg.COMPUTE_METRICS:
+            from src.metrics import compute_metrics
+            scores = compute_metrics(
+                self.enc, self.gen, self.test_loader, cfg, self.device
+            )
+            self._save_metrics(scores)
+
         return self.g_losses, self.d_losses
+
+
+    def _save_metrics(self, scores: dict):
+        """Write FID / DACID + loss history to a JSON file in RESULTS_DIR."""
+        import json
+        payload = {
+            "experiment": self.cfg.EXPERIMENT_NAME,
+            "fid":        scores.get("fid"),
+            "dacid":      scores.get("dacid"),
+            "g_losses":   self.g_losses,
+            "d_losses":   self.d_losses,
+        }
+        path = self.cfg.RESULTS_DIR / "metrics.json"
+        with open(path, "w") as f:
+            json.dump(payload, f, indent=2)
+        print(f"[trainer] Metrics saved → {path}")
