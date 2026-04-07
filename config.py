@@ -1,11 +1,12 @@
 """
-config.py — Central configuration for AttGAN.
+config.py — Central configuration for AttGAN + Simple GAN.
 
 All hyperparameters and directory paths live here.
-Import this anywhere in the project:
-    from config import Config
 
-For experiments, subclass Config and override only the values that change:
+    from config import Config
+    cfg = Config()
+
+For experiments, subclass Config and override only what changes:
     from experiments.exp1_baseline import Exp1Config
 """
 
@@ -13,14 +14,21 @@ from pathlib import Path
 
 
 class Config:
-    # ── Experiment identity ───────────────────────────────────────────────────
-    # Change this when running different experiments so results are
-    # saved to results/<EXPERIMENT_NAME>/ and checkpoints/<EXPERIMENT_NAME>/
+    # ── Experiment identity ───────────────────────────────────────────
     EXPERIMENT_NAME = "default"
 
-    # ── Paths (relative to repo root — works after `git clone`) ──────────────
-    ROOT           = Path(__file__).parent.resolve()
-    DATA_DIR       = ROOT / "data"
+    # ── Root paths ───────────────────────────────────────────────────
+    ROOT = Path(__file__).parent.resolve()
+
+    # ── CelebA dataset location ───────────────────────────────────────
+    # Point this to the folder that contains:
+    #   img_align_celeba/   (unzipped images)
+    #   list_attr_celeba.csv
+    #   list_eval_partition.csv
+    #
+    # LOCAL: leave as-is — put the files in  data/celeba/
+    # COLAB: overridden in Cell 3 of the notebook to your Drive path
+    CELEBA_DIR = ROOT / "data" / "celeba"
 
     @property
     def RESULTS_DIR(self):
@@ -30,10 +38,9 @@ class Config:
     def CHECKPOINT_DIR(self):
         return self.ROOT / "checkpoints" / self.EXPERIMENT_NAME
 
-    # ── Dataset ───────────────────────────────────────────────────────────────
+    # ── Dataset ──────────────────────────────────────────────────────
     IMG_SIZE = 128
 
-    # 13 attributes selected from CelebA's 40 binary labels
     ATTRS = [
         "Bald", "Bangs", "Black_Hair", "Blond_Hair", "Brown_Hair",
         "Bushy_Eyebrows", "Eyeglasses", "Male",
@@ -42,7 +49,7 @@ class Config:
     ]
     N_ATTRS = len(ATTRS)   # 13
 
-    # ── Training ──────────────────────────────────────────────────────────────
+    # ── Training ─────────────────────────────────────────────────────
     BATCH_SIZE  = 32
     N_EPOCHS    = 30
     LR          = 0.0002
@@ -50,26 +57,24 @@ class Config:
     BETA2       = 0.999
     NUM_WORKERS = 2
 
-    # ── Loss weights (λ values from the AttGAN paper) ─────────────────────────
-    LAMBDA_REC   = 100.0   # reconstruction fidelity
-    LAMBDA_CLS_D =  10.0   # discriminator attribute classification
-    LAMBDA_CLS_G =   1.0   # generator attribute classification
+    # ── Loss weights (AttGAN paper defaults) ─────────────────────────
+    LAMBDA_REC   = 100.0
+    LAMBDA_CLS_D =  10.0
+    LAMBDA_CLS_G =   1.0
 
-    # ── Architecture depth ────────────────────────────────────────────────────
-    ENC_DIM = 64   # base channels for Encoder
-    DEC_DIM = 64   # base channels for Generator / Decoder
-    DIS_DIM = 64   # base channels for Discriminator
+    # ── Architecture ─────────────────────────────────────────────────
+    ENC_DIM = 64
+    DEC_DIM = 64
+    DIS_DIM = 64
 
-    # ── Logging ───────────────────────────────────────────────────────────────
-    SAVE_EVERY      = 5    # save samples + checkpoint every N epochs
-    LOG_EVERY_STEPS = 100  # print loss every N batches
+    # ── Logging ──────────────────────────────────────────────────────
+    SAVE_EVERY      = 5
+    LOG_EVERY_STEPS = 100
 
-    # ── Metrics ───────────────────────────────────────────────────────────────
-    # Set to True to compute FID + DACID after training (adds ~5 min on T4)
+    # ── Metrics (FID + DACID) ─────────────────────────────────────────
     COMPUTE_METRICS   = True
-    METRICS_N_SAMPLES = 2048   # number of real/fake images used for FID/DACID
+    METRICS_N_SAMPLES = 2048
 
     def __init__(self):
-        """Create output directories on instantiation."""
-        for d in [self.DATA_DIR, self.RESULTS_DIR, self.CHECKPOINT_DIR]:
+        for d in [self.RESULTS_DIR, self.CHECKPOINT_DIR]:
             d.mkdir(parents=True, exist_ok=True)
