@@ -15,20 +15,13 @@ from pathlib import Path
 
 class Config:
     # ── Experiment identity ───────────────────────────────────────────
+    # Each experiment saves results to results/<EXPERIMENT_NAME>/
+    # and checkpoints to checkpoints/<EXPERIMENT_NAME>/
     EXPERIMENT_NAME = "default"
 
     # ── Root paths ───────────────────────────────────────────────────
-    ROOT = Path(__file__).parent.resolve()
-
-    # ── CelebA dataset location ───────────────────────────────────────
-    # Point this to the folder that contains:
-    #   img_align_celeba/   (unzipped images)
-    #   list_attr_celeba.csv
-    #   list_eval_partition.csv
-    #
-    # LOCAL: leave as-is — put the files in  data/celeba/
-    # COLAB: overridden in Cell 3 of the notebook to your Drive path
-    CELEBA_DIR = ROOT / "data" / "celeba"
+    ROOT     = Path(__file__).parent.resolve()
+    DATA_DIR = ROOT / "data"          # torchvision downloads CelebA here
 
     @property
     def RESULTS_DIR(self):
@@ -41,6 +34,7 @@ class Config:
     # ── Dataset ──────────────────────────────────────────────────────
     IMG_SIZE = 128
 
+    # 13 attributes selected from CelebA's 40 binary labels
     ATTRS = [
         "Bald", "Bangs", "Black_Hair", "Blond_Hair", "Brown_Hair",
         "Bushy_Eyebrows", "Eyeglasses", "Male",
@@ -58,23 +52,25 @@ class Config:
     NUM_WORKERS = 2
 
     # ── Loss weights (AttGAN paper defaults) ─────────────────────────
-    LAMBDA_REC   = 100.0
-    LAMBDA_CLS_D =  10.0
-    LAMBDA_CLS_G =   1.0
+    LAMBDA_REC   = 100.0   # reconstruction fidelity
+    LAMBDA_CLS_D =  10.0   # discriminator attribute classification
+    LAMBDA_CLS_G =   1.0   # generator attribute classification
 
-    # ── Architecture ─────────────────────────────────────────────────
-    ENC_DIM = 64
-    DEC_DIM = 64
-    DIS_DIM = 64
+    # ── Architecture depth ────────────────────────────────────────────
+    ENC_DIM = 64   # base channels for Encoder
+    DEC_DIM = 64   # base channels for Generator / Decoder
+    DIS_DIM = 64   # base channels for Discriminator
 
     # ── Logging ──────────────────────────────────────────────────────
-    SAVE_EVERY      = 5
-    LOG_EVERY_STEPS = 100
+    SAVE_EVERY      = 5    # save samples + checkpoint every N epochs
+    LOG_EVERY_STEPS = 100  # print loss every N batches
 
     # ── Metrics (FID + DACID) ─────────────────────────────────────────
+    # Set True to compute FID + DACID after training (~5 extra min on T4)
     COMPUTE_METRICS   = True
     METRICS_N_SAMPLES = 2048
 
     def __init__(self):
-        for d in [self.RESULTS_DIR, self.CHECKPOINT_DIR]:
+        """Create output directories on instantiation."""
+        for d in [self.DATA_DIR, self.RESULTS_DIR, self.CHECKPOINT_DIR]:
             d.mkdir(parents=True, exist_ok=True)
